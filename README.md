@@ -61,19 +61,20 @@ Navigate to: `http://localhost:8001`
 
 ## 🎯 Generate Your First Image
 
-1. **Add Components**: Drag components from the right panel
-   - Start with a **Flux Model** or **SD 1.5** component
-   - Add a **Sampler** component
-   - Add an **Output** component
+1. **Clear Canvas**: Start with a fresh workspace
 
-2. **Connect Components**: LiteGraph automatically connects compatible ports
+2. **Add SDXL Model Component**: 
+   - Drag an **SDXL** component from the right panel (currently the most stable option)
+   
+3. **Generate Basic Workflow**: 
+   - Click the **Generate Basic Workflow** button to automatically add and connect required components
 
-3. **Set Properties**: 
+4. **Adjust Settings**: 
+   - Modify steps (20-30 recommended)
+   - Adjust CFG scale (7-8 works well)
    - Enter your prompt in the model component
-   - Adjust steps, CFG scale in sampler
-   - Configure output settings
 
-4. **Generate**: Click the **Generate** button
+5. **Generate**: Click the **Generate** button to create your first image
 
 ## 📁 Project Structure
 
