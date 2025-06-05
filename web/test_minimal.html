@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal LiteGraph Test</title>
+    <script src="https://unpkg.com/litegraph.js@0.7.18/build/litegraph.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/litegraph.js@0.7.18/css/litegraph.css">
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #container { width: 100vw; height: 100vh; position: relative; }
+        #canvas { width: 100%; height: 100%; background: #222; }
+        #controls { position: absolute; top: 10px; left: 10px; z-index: 100; }
+        button { margin: 5px; padding: 8px 12px; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="controls">
+            <button onclick="createTestNode()">Create Test Node</button>
+            <button onclick="createSmallNode()">Create Small Node</button>
+            <button onclick="clearGraph()">Clear</button>
+        </div>
+    </div>
+
+    <script>
+        // Force small node settings
+        LiteGraph.NODE_TEXT_SIZE = 10;
+        LiteGraph.NODE_WIDGET_HEIGHT = 16;
+        LiteGraph.NODE_TITLE_HEIGHT = 20;
+        LiteGraph.NODE_MIN_WIDTH = 150;
+
+        const graph = new LGraph();
+        const canvas = new LGraphCanvas("#canvas", graph);
+        
+        canvas.allow_dragcanvas = true;
+        canvas.allow_dragnodes = true;
+        canvas.allow_interaction = true;
+        
+        graph.start();
+
+        // Test node with small size and working widgets
+        function TestNode() {
+            this.title = "Test Node";
+            this.size = [200, 80]; // Force small size
+            
+            this.addInput("input", "text");
+            this.addOutput("output", "text");
+            
+            // Add working widgets with callbacks
+            this.addWidget("text", "text_field", "test", (value) => {
+                console.log("Text changed:", value);
+                this.properties.text_field = value;
+            });
+            
+            this.addWidget("number", "number_field", 42, (value) => {
+                console.log("Number changed:", value);
+                this.properties.number_field = value;
+            });
+            
+            this.addWidget("combo", "choice", "option1", (value) => {
+                console.log("Choice changed:", value);
+                this.properties.choice = value;
+            }, {values: ["option1", "option2", "option3"]});
+            
+            this.properties = {
+                text_field: "test",
+                number_field: 42,
+                choice: "option1"
+            };
+        }
+        
+        TestNode.title = "Test Node";
+        LiteGraph.registerNodeType("test/node", TestNode);
+
+        // Small compact node
+        function SmallNode() {
+            this.title = "Small";
+            this.size = [120, 60]; // Very small
+            
+            this.addInput("in", "*");
+            this.addOutput("out", "*");
+            
+            this.addWidget("text", "value", "hello", (v) => {
+                this.properties.value = v;
+            });
+            
+            this.properties = { value: "hello" };
+        }
+        
+        SmallNode.title = "Small Node";
+        LiteGraph.registerNodeType("test/small", SmallNode);
+
+        function createTestNode() {
+            const node = LiteGraph.createNode("test/node");
+            node.pos = [100, 100];
+            graph.add(node);
+            console.log("Created test node with widgets:", node.widgets?.length);
+        }
+
+        function createSmallNode() {
+            const node = LiteGraph.createNode("test/small");
+            node.pos = [300, 100];
+            graph.add(node);
+            console.log("Created small node");
+        }
+
+        function clearGraph() {
+            graph.clear();
+        }
+
+        // Global access for debugging
+        window.graph = graph;
+        window.canvas = canvas;
+        
+        console.log("Minimal test ready - try creating nodes");
+    </script>
+</body>
+</html>

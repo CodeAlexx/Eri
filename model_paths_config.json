@@ -1,0 +1,74 @@
+{
+  "model_directories": {
+    "flux": [
+      "/home/alex/SwarmUI/Models/diffusion_models",
+      "/home/alex/models/flux",
+      "./models/flux"
+    ],
+    "sd15": [
+      "/home/alex/SwarmUI/Models/diffusion_models",
+      "/home/alex/models/sd15",
+      "./models/sd15"
+    ],
+    "sdxl": [
+      "/home/alex/SwarmUI/Models/diffusion_models", 
+      "/home/alex/SwarmUI/Models/Stable-Diffusion",
+      "/home/alex/models/sdxl",
+      "./models/sdxl"
+    ],
+    "sd35": [
+      "/home/alex/SwarmUI/Models/diffusion_models",
+      "/home/alex/models/sd35",
+      "./models/sd35"
+    ],
+    "chroma": [
+      "/home/alex/SwarmUI/Models/diffusion_models",
+      "/home/alex/models/chroma", 
+      "./models/chroma"
+    ],
+    "lora": [
+      "/home/alex/SwarmUI/Models/Lora",
+      "/home/alex/models/lora",
+      "./models/lora"
+    ],
+    "vae": [
+      "/home/alex/SwarmUI/Models/VAE",
+      "/home/alex/models/vae",
+      "./models/vae"
+    ],
+    "controlnet": [
+      "/home/alex/SwarmUI/Models/controlnet",
+      "/home/alex/models/controlnet",
+      "./models/controlnet"
+    ]
+  },
+  "fallback_directories": [
+    "/home/alex/SwarmUI/Models",
+    "/home/alex/models",
+    "./models",
+    "~/.cache/huggingface/hub"
+  ],
+  "file_extensions": {
+    "models": [".safetensors", ".ckpt", ".pt", ".bin"],
+    "gguf": [".gguf"],
+    "diffusers": ["diffusion_pytorch_model.safetensors", "config.json"]
+  },
+  "model_filename_patterns": {
+    "flux": {
+      "flux-dev": ["flux1-dev.safetensors", "flux_dev.safetensors", "fluxDEVDEDISTILLED_fp16.safetensors"],
+      "flux-schnell": ["flux1-schnell.safetensors", "flux_schnell.safetensors"],
+      "flux-turbo": ["flux1-turbo.safetensors", "flux_turbo_alpha.safetensors"],
+      "flux-lite": ["flux.1-lite-8B.safetensors", "flux_lite.safetensors"],
+      "flux-sigma": ["fluxSigmaVision_fp16.safetensors", "flux_sigma_vision.safetensors"]
+    },
+    "sd15": {
+      "sd15-base": ["stable-diffusion-v1-5.safetensors", "v1-5-pruned.safetensors"],
+      "dreamshaper": ["dreamshaper_8.safetensors", "dreamshaper*.safetensors"],
+      "realistic-vision": ["realisticVisionV51.safetensors", "realistic_vision*.safetensors"]
+    },
+    "sdxl": {
+      "sdxl-base": ["sd_xl_base_1.0.safetensors", "sdxl_base*.safetensors"],
+      "sdxl-refiner": ["sd_xl_refiner_1.0.safetensors", "sdxl_refiner*.safetensors"]
+    }
+  }
+}

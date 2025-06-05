@@ -1,0 +1,49 @@
+# Dependencies and environments
+flutter/
+venv/
+node_modules/
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+frontend/build/
+frontend/.dart_tool/
+
+# Logs and temporary files
+*.log
+backend.log
+frontend.log
+web.log
+backend_debug.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Model files (too large for git)
+*.safetensors
+*.ckpt
+*.pt
+*.bin
+output/
+
+# Temporary test files
+=*
+
+# Development archives
+*.tar.xz
+*.zip

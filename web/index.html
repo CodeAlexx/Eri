@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SD Forms - LiteGraph Web UI</title>
+    
+    <!-- LiteGraph.js from CDN -->
+    <script src="https://unpkg.com/litegraph.js@0.7.18/build/litegraph.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/litegraph.js@0.7.18/css/litegraph.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&family=SF+Mono&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background-color: #0a0a0f;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #mycanvas {
+            background: linear-gradient(135deg, #0a0a0f 0%, #151521 100%);
+            width: 100%;
+            height: 100%;
+            /* Fix blurry canvas on high-DPI displays */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        #toolbar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            background: rgba(30, 30, 40, 0.85);
+            padding: 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: linear-gradient(135deg, #4a4a5e 0%, #3a3a4e 100%);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: rgba(124, 58, 237, 0.1);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: rgba(124, 58, 237, 0.5);
+            transform: translateY(-1px);
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            right: 270px;
+            z-index: 1000;
+            background: rgba(30, 30, 40, 0.85);
+            padding: 10px 16px;
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-connected {
+            color: #a78bfa;
+            font-weight: 500;
+        }
+
+        .status-disconnected {
+            color: #f87171;
+            font-weight: 500;
+        }
+
+        #progress {
+            position: absolute;
+            bottom: 140px;
+            left: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: rgba(45, 45, 45, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #preview {
+            position: absolute;
+            bottom: 60px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(45, 45, 45, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+            display: none;
+            max-width: 200px;
+        }
+
+        #preview img {
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        /* macOS Purple Theme - LiteGraph Beautiful Design */
+        .litegraph {
+            background: linear-gradient(135deg, #0a0a0f 0%, #151521 100%) !important;
+        }
+
+        /* Node Design with macOS Aesthetics */
+        .lgraphnode {
+            background: rgba(30, 30, 40, 0.85) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(124, 58, 237, 0.3) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15) !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif !important;
+            font-size: 12px !important;
+            overflow: hidden !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .lgraphnode:hover {
+            border-color: rgba(124, 58, 237, 0.5) !important;
+            box-shadow: 0 12px 40px rgba(124, 58, 237, 0.25) !important;
+        }
+
+        .lgraphnode.selected {
+            border-color: #7c3aed !important;
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3), 0 12px 40px rgba(124, 58, 237, 0.35) !important;
+        }
+
+        /* Node Title Bar */
+        .lgraphnode .title {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(167, 139, 250, 0.1) 100%) !important;
+            color: #ffffff !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            padding: 8px 12px !important;
+            height: auto !important;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2) !important;
+            letter-spacing: 0.3px !important;
+        }
+
+        /* Node Ports Styling */
+        .lgraphnode .slot {
+            color: #e2e8f0 !important;
+            font-size: 11px !important;
+            height: 20px !important;
+            padding: 2px 8px !important;
+        }
+
+        /* Form Elements - Dropdowns */
+        .lgraphnode select {
+            background: rgba(20, 20, 30, 0.6) !important;
+            border: 1px solid rgba(124, 58, 237, 0.3) !important;
+            border-radius: 6px !important;
+            color: #ffffff !important;
+            font-size: 11px !important;
+            padding: 4px 8px !important;
+            height: 24px !important;
+            outline: none !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+        }
+
+        .lgraphnode select:hover {
+            border-color: rgba(124, 58, 237, 0.5) !important;
+            background: rgba(30, 30, 40, 0.8) !important;
+        }
+
+        .lgraphnode select:focus {
+            border-color: #7c3aed !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2) !important;
+        }
+
+        /* Form Elements - Text Inputs */
+        .lgraphnode input {
+            background: rgba(20, 20, 30, 0.6) !important;
+            border: 1px solid rgba(124, 58, 237, 0.3) !important;
+            border-radius: 6px !important;
+            color: #ffffff !important;
+            font-size: 11px !important;
+            padding: 4px 8px !important;
+            height: 22px !important;
+            outline: none !important;
+            transition: all 0.2s ease !important;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .lgraphnode input[type="number"] {
+            font-family: 'SF Mono', 'Monaco', monospace !important;
+        }
+
+        .lgraphnode input:hover {
+            border-color: rgba(124, 58, 237, 0.5) !important;
+        }
+
+        .lgraphnode input:focus {
+            border-color: #7c3aed !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+            background: rgba(30, 30, 40, 0.8) !important;
+        }
+
+        /* Widget Container */
+        .lgraphnode .widget {
+            background: transparent !important;
+            border: none !important;
+            margin: 4px 8px !important;
+            height: auto !important;
+            min-height: 24px !important;
+        }
+
+        /* Context Menu - macOS Style */
+        .litegraph .litemenu {
+            background: rgba(30, 30, 40, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(124, 58, 237, 0.3) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+            padding: 4px !important;
+        }
+
+        .litegraph .litemenu .litemenu-entry {
+            color: #ffffff !important;
+            padding: 8px 16px !important;
+            border-radius: 4px !important;
+            margin: 2px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .litegraph .litemenu .litemenu-entry:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+            color: #ffffff !important;
+        }
+
+        .lgraphcanvas {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif !important;
+        }
+        
+        /* Connection Wires - Purple Gradient */
+        .lgraphcanvas .link {
+            stroke: url(#purpleGradient) !important;
+            stroke-width: 2px !important;
+            filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.4)) !important;
+        }
+        
+        /* Animated connection effect */
+        @keyframes flowAnimation {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: 20; }
+        }
+        
+        .lgraphcanvas .link.active {
+            stroke-dasharray: 5, 5 !important;
+            animation: flowAnimation 0.5s linear infinite !important;
+        }
+
+        /* Component Toolbar Styling - Right side docked */
+        #componentToolbar {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            bottom: 10px;
+            width: 250px;
+            z-index: 1000;
+            background: rgba(30, 30, 40, 0.9);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .toolbar-header {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.3);
+            padding-bottom: 8px;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #7c3aed, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .component-category {
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+            padding-bottom: 12px;
+        }
+        
+        .component-category:last-child {
+            border-bottom: none;
+        }
+        
+        /* Custom scrollbar for component toolbar */
+        #componentToolbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #componentToolbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        #componentToolbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        #componentToolbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .category-header {
+            color: #a78bfa;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .component-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .component-btn {
+            padding: 10px 14px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: left;
+            background: rgba(124, 58, 237, 0.05);
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.3px;
+        }
+
+        .component-btn:hover {
+            background: rgba(124, 58, 237, 0.15);
+            border-color: rgba(124, 58, 237, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+        }
+
+        .component-btn:active {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: #ffffff;
+            transform: translateY(0);
+            border-color: #7c3aed;
+        }
+
+        /* Object Inspector Styling */
+        #objectInspector {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 250px;
+            z-index: 1000;
+            background: rgba(30, 30, 40, 0.9);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            max-height: 400px;
+            overflow-y: auto;
+            cursor: move;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        #objectInspector.dragging {
+            user-select: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .inspector-header {
+            color: #ffffff;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+        }
+
+        .no-selection {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .property-group {
+            margin-bottom: 10px;
+        }
+
+        .property-label {
+            color: #cccccc;
+            font-size: 11px;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid #555;
+            border-radius: 3px;
+            background-color: #3a3a3a;
+            color: #ffffff;
+            font-size: 11px;
+        }
+
+        .property-input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .property-select {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid #555;
+            border-radius: 3px;
+            background-color: #3a3a3a;
+            color: #ffffff;
+            font-size: 11px;
+        }
+
+        .property-checkbox {
+            margin-right: 5px;
+        }
+
+        .property-category {
+            color: #888;
+            font-size: 10px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            border-top: 1px solid #444;
+            padding-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- SVG Definitions for Purple Gradients -->
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+            <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
+            </linearGradient>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+    </svg>
+    
+    <div id="container">
+        <canvas id="mycanvas"></canvas>
+        
+        <!-- Main Control Toolbar -->
+        <div id="toolbar">
+            <button id="generateBtn" class="btn btn-primary">Generate</button>
+            <button id="basicWorkflowBtn" class="btn btn-primary" style="background-color: #2196F3;">Basic Workflow</button>
+            <button id="clearBtn" class="btn btn-secondary">Clear</button>
+            <span style="margin: 0 10px;">|</span>
+            <button id="saveBtn" class="btn btn-secondary">Save</button>
+            <button id="loadBtn" class="btn btn-secondary">Load</button>
+            <span style="margin: 0 10px;">|</span>
+            <button id="zoomInBtn" class="btn btn-secondary">+</button>
+            <button id="zoomOutBtn" class="btn btn-secondary">-</button>
+            <button id="zoomResetBtn" class="btn btn-secondary">Reset</button>
+            <span style="margin: 0 10px;">|</span>
+            <button id="centerBtn" class="btn btn-secondary">Center View</button>
+            <button id="fitBtn" class="btn btn-secondary">Fit Content</button>
+        </div>
+
+        <!-- Component Toolbar - Node Creation -->
+        <div id="componentToolbar">
+            <div class="toolbar-header">Components</div>
+            <div class="component-category">
+                <div class="category-header">Image Models</div>
+                <div class="component-buttons" id="coreComponents">
+                    <!-- Image model components will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="component-category">
+                <div class="category-header">Video Models</div>
+                <div class="component-buttons" id="videoModelComponents">
+                    <!-- Video components will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="component-category">
+                <div class="category-header">Display</div>
+                <div class="component-buttons" id="displayComponents">
+                    <!-- Display components will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="component-category">
+                <div class="category-header">Advanced</div>
+                <div class="component-buttons" id="advancedComponents">
+                    <!-- Advanced components will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Object Inspector / Properties Panel -->
+        <div id="objectInspector">
+            <div class="inspector-header">Properties</div>
+            <div id="inspectorContent">
+                <div class="no-selection">Select a node to view properties</div>
+            </div>
+        </div>
+
+        <div id="status">
+            <span id="statusText" class="status-disconnected">Connecting...</span>
+        </div>
+
+        <div id="progress">
+            <div id="progressText">Generating...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div id="preview">
+            <div>Live Preview:</div>
+            <img id="previewImg" src="" alt="Preview">
+        </div>
+    </div>
+
+    <!-- Hidden file input for loading workflows -->
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <!-- Scripts -->
+    <script src="/js/app.js?v=8"></script>
+</body>
+</html>

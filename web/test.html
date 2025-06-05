@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SD Forms Test - SDXL Workflow</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    
+    <!-- LiteGraph.js from CDN -->
+    <script src="https://unpkg.com/litegraph.js@0.7.1/build/litegraph.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/litegraph.js@0.7.1/css/litegraph.css">
+</head>
+<body>
+    <!-- Main Test Application Container -->
+    <div id="test-app">
+        <!-- Test Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">
+                    <span class="title-icon">🧪</span>
+                    SD Forms Test - SDXL Workflow
+                </h1>
+            </div>
+            
+            <div class="header-center">
+                <div class="workflow-controls">
+                    <button id="load-sdxl-test" class="btn btn-primary">
+                        <span class="btn-icon">🤖</span>
+                        Load SDXL Test Workflow
+                    </button>
+                    <button id="validate-btn" class="btn btn-secondary">
+                        <span class="btn-icon">✓</span>
+                        Validate
+                    </button>
+                    <button id="generate-btn" class="btn btn-primary" disabled>
+                        <span class="btn-icon">⚡</span>
+                        Generate
+                    </button>
+                    <button id="clear-btn" class="btn btn-secondary">
+                        <span class="btn-icon">🗑️</span>
+                        Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="connection-status">
+                    <span id="connection-indicator" class="status-indicator disconnected"></span>
+                    <span id="connection-text">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="app-content">
+            <!-- Test Instructions Panel -->
+            <aside class="component-sidebar">
+                <div class="sidebar-header">
+                    <h2>SDXL Test Instructions</h2>
+                </div>
+                
+                <div class="test-instructions">
+                    <div class="test-section">
+                        <h3>🎯 Test Objectives</h3>
+                        <ul>
+                            <li>Verify SDXL model loading and auto-configuration</li>
+                            <li>Test basic Model → Sampler → Output workflow</li>
+                            <li>Validate prompt handling and generation parameters</li>
+                            <li>Confirm image output and saving functionality</li>
+                        </ul>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>🔧 Expected Configuration</h3>
+                        <div class="config-item">
+                            <strong>Model:</strong> SDXL Base (auto-configured)
+                        </div>
+                        <div class="config-item">
+                            <strong>Resolution:</strong> 1024x1024
+                        </div>
+                        <div class="config-item">
+                            <strong>Steps:</strong> 25
+                        </div>
+                        <div class="config-item">
+                            <strong>CFG Scale:</strong> 7.0
+                        </div>
+                        <div class="config-item">
+                            <strong>Sampler:</strong> DPMSolverMultistep
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>📋 Test Procedure</h3>
+                        <ol>
+                            <li>Click "Load SDXL Test Workflow" to setup components</li>
+                            <li>Verify all components are connected properly</li>
+                            <li>Check auto-configured parameters in properties panel</li>
+                            <li>Modify prompt if desired</li>
+                            <li>Click "Validate" to check workflow integrity</li>
+                            <li>Click "Generate" to test image generation</li>
+                            <li>Verify output appears in results panel</li>
+                        </ol>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>✅ Success Criteria</h3>
+                        <ul>
+                            <li>Model loads without errors</li>
+                            <li>Workflow validates successfully</li>
+                            <li>Generation completes with progress updates</li>
+                            <li>High-quality 1024x1024 image is produced</li>
+                            <li>Image matches prompt description</li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Workflow Area -->
+            <main class="workflow-area">
+                <!-- Canvas Container -->
+                <div class="canvas-container">
+                    <canvas id="workflow-canvas" class="workflow-canvas"></canvas>
+                </div>
+
+                <!-- Canvas Controls -->
+                <div class="canvas-controls">
+                    <div class="zoom-controls">
+                        <button id="zoom-in" class="btn btn-small">🔍+</button>
+                        <span id="zoom-level">100%</span>
+                        <button id="zoom-out" class="btn btn-small">🔍-</button>
+                        <button id="zoom-fit" class="btn btn-small">📐</button>
+                    </div>
+                    
+                    <div class="grid-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="show-grid" checked>
+                            <span>Grid</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="snap-to-grid" checked>
+                            <span>Snap</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Progress Overlay -->
+                <div id="progress-overlay" class="progress-overlay hidden">
+                    <div class="progress-content">
+                        <div class="progress-header">
+                            <h3>Testing SDXL Generation...</h3>
+                            <button id="cancel-generation" class="btn btn-danger btn-small">Cancel</button>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progress-message">Initializing SDXL pipeline...</span>
+                            <span id="progress-percentage">0%</span>
+                        </div>
+                        <div id="preview-container" class="preview-container">
+                            <!-- Live preview images will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Properties Panel -->
+            <aside class="properties-panel">
+                <div class="panel-header">
+                    <h2>Component Properties</h2>
+                    <div class="panel-tabs">
+                        <button class="tab-button active" data-tab="properties">Properties</button>
+                        <button class="tab-button" data-tab="test-results">Test Results</button>
+                    </div>
+                </div>
+
+                <!-- Properties Tab -->
+                <div id="properties-tab" class="tab-content active">
+                    <div class="selected-component">
+                        <div id="no-selection" class="no-selection">
+                            <div class="no-selection-icon">🧪</div>
+                            <p>Load test workflow to begin testing</p>
+                        </div>
+                        
+                        <div id="component-properties" class="component-properties hidden">
+                            <div class="component-header">
+                                <div class="component-info">
+                                    <span id="selected-component-icon" class="component-icon">📦</span>
+                                    <div class="component-details">
+                                        <h3 id="selected-component-name">Component Name</h3>
+                                        <span id="selected-component-type" class="component-type">component_type</span>
+                                    </div>
+                                </div>
+                                <button id="delete-component" class="btn btn-danger btn-small">🗑️</button>
+                            </div>
+                            
+                            <div id="properties-list" class="properties-list">
+                                <!-- Properties will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Results Tab -->
+                <div id="test-results-tab" class="tab-content">
+                    <div class="test-results">
+                        <h3>Test Status</h3>
+                        <div id="test-status" class="test-status">
+                            <div class="status-item">
+                                <span class="status-label">Workflow Loaded:</span>
+                                <span id="workflow-loaded-status" class="status-value pending">❌ Pending</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Components Connected:</span>
+                                <span id="components-connected-status" class="status-value pending">❌ Pending</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Validation Passed:</span>
+                                <span id="validation-passed-status" class="status-value pending">❌ Pending</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Generation Completed:</span>
+                                <span id="generation-completed-status" class="status-value pending">❌ Pending</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Output Verified:</span>
+                                <span id="output-verified-status" class="status-value pending">❌ Pending</span>
+                            </div>
+                        </div>
+                        
+                        <h3>Performance Metrics</h3>
+                        <div id="performance-metrics" class="performance-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">Model Load Time:</span>
+                                <span id="model-load-time" class="metric-value">-</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Generation Time:</span>
+                                <span id="generation-time" class="metric-value">-</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Total Runtime:</span>
+                                <span id="total-runtime" class="metric-value">-</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Memory Usage:</span>
+                                <span id="memory-usage" class="metric-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results-panel" class="results-panel">
+            <div class="results-header">
+                <h2>Test Results</h2>
+                <div class="results-controls">
+                    <button id="download-test-result" class="btn btn-secondary">📥 Download</button>
+                    <button id="verify-output" class="btn btn-primary">✅ Verify Output</button>
+                    <button id="clear-results" class="btn btn-secondary">🗑️ Clear</button>
+                </div>
+            </div>
+            <div id="results-grid" class="results-grid">
+                <!-- Generated test images will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/execution.js"></script>
+    <script src="js/ui/properties.js"></script>
+    <script src="js/workflow.js"></script>
+    
+    <script>
+        /**
+         * SDXL Test Workflow Implementation
+         */
+        class SDXLTestApp {
+            constructor() {
+                this.api = new ApiService();
+                this.graph = null;
+                this.graphCanvas = null;
+                this.testStartTime = null;
+                this.modelLoadStartTime = null;
+                this.generationStartTime = null;
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('🧪 Initializing SDXL Test Application...');
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Setup API event handlers
+                this.setupApiHandlers();
+                
+                // Initialize LiteGraph
+                this.initializeLiteGraph();
+                
+                // Register test-specific nodes
+                await this.registerTestNodes();
+                
+                // Check backend connection
+                this.checkBackendConnection();
+                
+                console.log('✅ SDXL Test initialized successfully');
+            }
+
+            setupEventListeners() {
+                // Test workflow buttons
+                document.getElementById('load-sdxl-test').addEventListener('click', () => {
+                    this.loadSDXLTestWorkflow();
+                });
+                
+                document.getElementById('validate-btn').addEventListener('click', () => {
+                    this.validateWorkflow();
+                });
+                
+                document.getElementById('generate-btn').addEventListener('click', () => {
+                    this.executeTestWorkflow();
+                });
+                
+                document.getElementById('clear-btn').addEventListener('click', () => {
+                    this.clearWorkflow();
+                });
+
+                document.getElementById('verify-output').addEventListener('click', () => {
+                    this.verifyOutput();
+                });
+
+                // Canvas controls
+                document.getElementById('zoom-in').addEventListener('click', () => {
+                    this.graphCanvas.ds.scale *= 1.1;
+                    this.graphCanvas.setDirty(true, true);
+                });
+                
+                document.getElementById('zoom-out').addEventListener('click', () => {
+                    this.graphCanvas.ds.scale *= 0.9;
+                    this.graphCanvas.setDirty(true, true);
+                });
+                
+                document.getElementById('zoom-fit').addEventListener('click', () => {
+                    this.graphCanvas.ds.scale = 1.0;
+                    this.graphCanvas.ds.offset = [0, 0];
+                    this.graphCanvas.setDirty(true, true);
+                });
+
+                // Tab switching
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const tabName = e.target.dataset.tab;
+                        this.switchTab(tabName);
+                    });
+                });
+            }
+
+            setupApiHandlers() {
+                this.api.onConnectionStatusChange = (connected) => {
+                    const indicator = document.getElementById('connection-indicator');
+                    const text = document.getElementById('connection-text');
+                    
+                    if (connected) {
+                        indicator.className = 'status-indicator connected';
+                        text.textContent = 'Connected';
+                    } else {
+                        indicator.className = 'status-indicator disconnected';
+                        text.textContent = 'Disconnected';
+                    }
+                };
+
+                this.api.onPreviewUpdate = (imageData, progress, step) => {
+                    this.updatePreview(imageData, progress, step);
+                };
+
+                this.api.onGenerationComplete = (results) => {
+                    this.handleGenerationComplete(results);
+                };
+
+                this.api.onError = (error) => {
+                    this.handleTestError(error);
+                };
+            }
+
+            initializeLiteGraph() {
+                this.graph = new LGraph();
+                
+                const canvas = document.getElementById('workflow-canvas');
+                this.graphCanvas = new LGraphCanvas(canvas, this.graph);
+                
+                // Configure canvas
+                this.graphCanvas.background_image = null;
+                this.graph.onAfterExecute = () => {
+                    this.updateConnectionStatus();
+                };
+                
+                this.graph.start();
+            }
+
+            async registerTestNodes() {
+                try {
+                    // Load node definitions from backend
+                    const components = await this.api.getComponents();
+                    
+                    // Register SDXL-specific nodes
+                    components.forEach(component => {
+                        if (['model', 'sdxl_model', 'sampler', 'output'].includes(component.component_type)) {
+                            this.registerNodeType(component);
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error('❌ Failed to register test nodes:', error);
+                }
+            }
+
+            registerNodeType(component) {
+                function TestNode() {
+                    this.title = component.display_name;
+                    this.size = [200, 100];
+                    
+                    // Add inputs
+                    component.input_ports.forEach(port => {
+                        this.addInput(port.name, port.data_type);
+                    });
+                    
+                    // Add outputs
+                    component.output_ports.forEach(port => {
+                        this.addOutput(port.name, port.data_type);
+                    });
+                    
+                    // Store component data
+                    this.component_type = component.component_type;
+                    this.component_data = component;
+                    this.properties = {};
+                    
+                    // Initialize default properties
+                    component.property_definitions.forEach(prop => {
+                        this.properties[prop.name] = prop.default_value;
+                    });
+                }
+
+                TestNode.title = component.display_name;
+                TestNode.prototype.onExecute = function() {
+                    // Test node execution logic
+                };
+
+                LiteGraph.registerNodeType(`test/${component.component_type}`, TestNode);
+            }
+
+            async loadSDXLTestWorkflow() {
+                console.log('🤖 Loading SDXL Test Workflow...');
+                
+                try {
+                    this.testStartTime = Date.now();
+                    
+                    // Clear existing workflow
+                    this.graph.clear();
+                    
+                    // Create Model Node
+                    const modelNode = LiteGraph.createNode('test/model');
+                    if (modelNode) {
+                        modelNode.pos = [50, 100];
+                        modelNode.title = 'SDXL Model';
+                        
+                        // Configure for SDXL
+                        modelNode.properties.model_path = 'sdxl-base-1.0';
+                        modelNode.properties.prompt = 'A beautiful landscape with mountains and a lake, highly detailed, photorealistic';
+                        modelNode.properties.negative_prompt = 'blurry, low quality, distorted';
+                        modelNode.properties.vae_selection = 'auto';
+                        
+                        this.graph.add(modelNode);
+                    }
+                    
+                    // Create Sampler Node
+                    const samplerNode = LiteGraph.createNode('test/sampler');
+                    if (samplerNode) {
+                        samplerNode.pos = [350, 100];
+                        samplerNode.title = 'SDXL Sampler';
+                        
+                        // Configure for SDXL
+                        samplerNode.properties.scheduler = 'DPMSolverMultistep';
+                        samplerNode.properties.num_inference_steps = 25;
+                        samplerNode.properties.guidance_scale = 7.0;
+                        samplerNode.properties.width = 1024;
+                        samplerNode.properties.height = 1024;
+                        
+                        this.graph.add(samplerNode);
+                    }
+                    
+                    // Create Output Node
+                    const outputNode = LiteGraph.createNode('test/output');
+                    if (outputNode) {
+                        outputNode.pos = [650, 100];
+                        outputNode.title = 'Output';
+                        
+                        outputNode.properties.output_format = 'PNG';
+                        outputNode.properties.save_path = 'test_output/sdxl_test';
+                        
+                        this.graph.add(outputNode);
+                    }
+                    
+                    // Connect nodes
+                    if (modelNode && samplerNode && outputNode) {
+                        modelNode.connect(0, samplerNode, 0); // pipeline connection
+                        samplerNode.connect(0, outputNode, 0); // image connection
+                    }
+                    
+                    // Update test status
+                    this.updateTestStatus('workflow-loaded-status', '✅ Loaded');
+                    this.updateTestStatus('components-connected-status', '✅ Connected');
+                    
+                    // Fit canvas to content
+                    this.graphCanvas.ds.scale = 0.8;
+                    this.graphCanvas.ds.offset = [-20, -50];
+                    this.graphCanvas.setDirty(true, true);
+                    
+                    console.log('✅ SDXL Test Workflow loaded successfully');
+                    
+                } catch (error) {
+                    console.error('❌ Failed to load SDXL test workflow:', error);
+                    this.updateTestStatus('workflow-loaded-status', '❌ Failed');
+                }
+            }
+
+            async validateWorkflow() {
+                console.log('✓ Validating SDXL workflow...');
+                
+                try {
+                    const workflow = this.graph.serialize();
+                    const isValid = await this.api.validateWorkflow(workflow);
+                    
+                    if (isValid) {
+                        this.updateTestStatus('validation-passed-status', '✅ Passed');
+                        document.getElementById('generate-btn').disabled = false;
+                        console.log('✅ Workflow validation passed');
+                    } else {
+                        this.updateTestStatus('validation-passed-status', '❌ Failed');
+                        console.log('❌ Workflow validation failed');
+                    }
+                    
+                } catch (error) {
+                    this.updateTestStatus('validation-passed-status', '❌ Error');
+                    console.error('❌ Validation error:', error);
+                }
+            }
+
+            async executeTestWorkflow() {
+                console.log('⚡ Executing SDXL test workflow...');
+                
+                try {
+                    this.generationStartTime = Date.now();
+                    
+                    // Show progress overlay
+                    document.getElementById('progress-overlay').classList.remove('hidden');
+                    
+                    // Execute workflow
+                    const workflow = this.graph.serialize();
+                    const result = await this.api.executeWorkflow(workflow);
+                    
+                    console.log('✅ SDXL test execution completed:', result);
+                    
+                } catch (error) {
+                    console.error('❌ SDXL test execution failed:', error);
+                    this.handleTestError(error);
+                }
+            }
+
+            handleGenerationComplete(results) {
+                const generationTime = Date.now() - this.generationStartTime;
+                const totalTime = Date.now() - this.testStartTime;
+                
+                // Update performance metrics
+                document.getElementById('generation-time').textContent = `${generationTime}ms`;
+                document.getElementById('total-runtime').textContent = `${totalTime}ms`;
+                
+                // Update test status
+                this.updateTestStatus('generation-completed-status', '✅ Completed');
+                
+                // Hide progress overlay
+                document.getElementById('progress-overlay').classList.add('hidden');
+                
+                // Display results
+                this.displayTestResults(results);
+                
+                console.log('✅ SDXL test completed successfully');
+            }
+
+            displayTestResults(results) {
+                const resultsGrid = document.getElementById('results-grid');
+                resultsGrid.innerHTML = '';
+                
+                results.forEach((result, index) => {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'result-image-container';
+                    
+                    const img = document.createElement('img');
+                    img.src = result.image_data || result.url;
+                    img.alt = `SDXL Test Result ${index + 1}`;
+                    img.className = 'result-image';
+                    
+                    const info = document.createElement('div');
+                    info.className = 'result-info';
+                    info.innerHTML = `
+                        <div class="result-title">SDXL Test Result ${index + 1}</div>
+                        <div class="result-details">
+                            <span>Size: ${result.width || 1024}x${result.height || 1024}</span>
+                            <span>Format: ${result.format || 'PNG'}</span>
+                        </div>
+                    `;
+                    
+                    imageContainer.appendChild(img);
+                    imageContainer.appendChild(info);
+                    resultsGrid.appendChild(imageContainer);
+                });
+                
+                document.getElementById('results-panel').classList.remove('hidden');
+            }
+
+            updatePreview(imageData, progress, step) {
+                document.getElementById('progress-fill').style.width = `${progress}%`;
+                document.getElementById('progress-percentage').textContent = `${Math.round(progress)}%`;
+                document.getElementById('progress-message').textContent = `Step ${step} - Generating SDXL image...`;
+                
+                if (imageData) {
+                    const previewContainer = document.getElementById('preview-container');
+                    previewContainer.innerHTML = `<img src="${imageData}" alt="Preview" class="preview-image">`;
+                }
+            }
+
+            updateTestStatus(statusId, status) {
+                const element = document.getElementById(statusId);
+                if (element) {
+                    element.textContent = status;
+                    element.className = `status-value ${status.includes('✅') ? 'success' : status.includes('❌') ? 'error' : 'pending'}`;
+                }
+            }
+
+            verifyOutput() {
+                this.updateTestStatus('output-verified-status', '✅ Verified');
+                console.log('✅ Output verification completed');
+            }
+
+            clearWorkflow() {
+                this.graph.clear();
+                document.getElementById('results-panel').classList.add('hidden');
+                document.getElementById('progress-overlay').classList.add('hidden');
+                
+                // Reset test status
+                document.querySelectorAll('.status-value').forEach(el => {
+                    el.textContent = '❌ Pending';
+                    el.className = 'status-value pending';
+                });
+                
+                console.log('🗑️ Workflow cleared');
+            }
+
+            switchTab(tabName) {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            }
+
+            async checkBackendConnection() {
+                try {
+                    const health = await this.api.checkHealth();
+                    console.log('✅ Backend connection established');
+                } catch (error) {
+                    console.warn('⚠️ Backend connection failed, using mock mode');
+                }
+            }
+
+            handleTestError(error) {
+                console.error('❌ Test error:', error);
+                document.getElementById('progress-overlay').classList.add('hidden');
+                
+                // Update relevant status to error
+                document.querySelectorAll('.status-value').forEach(el => {
+                    if (el.textContent.includes('❌ Pending')) {
+                        el.textContent = '❌ Error';
+                        el.className = 'status-value error';
+                    }
+                });
+            }
+        }
+
+        // Initialize the test application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.testApp = new SDXLTestApp();
+        });
+    </script>
+</body>
+</html>

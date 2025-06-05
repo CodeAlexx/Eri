@@ -1,0 +1,38 @@
+# Updated requirements.txt for SD Forms with Flux support
+
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Diffusers and transformers - latest versions for Flux support
+diffusers>=0.30.0
+transformers>=4.38.0
+accelerate>=0.24.0
+safetensors>=0.4.0
+
+# Additional SD dependencies
+omegaconf>=2.3.0
+einops>=0.7.0
+xformers>=0.0.22  # Optional but recommended for memory efficiency
+
+# Image processing
+Pillow>=10.0.0
+opencv-python>=4.8.0
+
+# FastAPI backend
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+
+# Utilities
+numpy>=1.24.0
+scipy>=1.11.0
+huggingface-hub>=0.19.0
+
+# Optional optimizations
+triton>=2.1.0  # For some optimized kernels
+bitsandbytes>=0.41.0  # For 8-bit optimizations
