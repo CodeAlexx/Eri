@@ -1200,6 +1200,8 @@ function createBasicWorkflow() {
         createVideoWorkflowAroundModel(modelNode);
     } else if (workflowType === 'animatediff') {
         createAnimatedDiffWorkflowAroundModel(modelNode);
+    } else if (workflowType === 'direct_output') {
+        createDirectOutputWorkflowAroundModel(modelNode);
     }
     
     console.log(`✅ Basic workflow created for: ${workflowType}`);
@@ -1215,15 +1217,19 @@ function detectWorkflowType(modelNode) {
         return 'video';
     }
     
-    // Check for image generation models
+    // Check for direct-output models (don't need sampler)
     if (nodeType === 'sdforms/hidream_i1' ||
         nodeType === 'sdforms/lumina_control' ||
-        nodeType === 'sdforms/sdxl_model' ||
+        nodeType === 'sdforms/omnigen') {
+        return 'direct_output';
+    }
+    
+    // Check for standard diffusion models (need sampler)
+    if (nodeType === 'sdforms/sdxl_model' ||
         nodeType === 'sdforms/flux_model' ||
         nodeType === 'sdforms/chroma' ||
         nodeType === 'sdforms/sd15' ||
-        nodeType === 'sdforms/sd35' ||
-        nodeType === 'sdforms/omnigen') {
+        nodeType === 'sdforms/sd35') {
         
         // For standard SD models, check if user wants AnimateDiff
         if (nodeType === 'sdforms/sdxl_model') {
@@ -1460,6 +1466,84 @@ function createAnimatedDiffWorkflowAroundModel(modelNode) {
             console.log('✅ AnimateDiff workflow connected: Model → AnimateDiff → MediaDisplay + Output');
         } catch (error) {
             console.warn('AnimateDiff connection failed:', error);
+        }
+    }, 100);
+}
+
+function createDirectOutputWorkflowAroundModel(modelNode) {
+    console.log('🎯 Creating direct output workflow (no sampler needed)...');
+    
+    // Direct output models (OmniGen, HiDream, Lumina) output images directly
+    // They only need Image display and Output components
+    
+    // Check if we already have the required components
+    const existingImage = graph._nodes.find(n => n.type === 'sdforms/image');
+    const existingOutput = graph._nodes.find(n => n.type === 'sdforms/output');
+    
+    // Calculate positions relative to model
+    const baseX = modelNode.pos[0];
+    const baseY = modelNode.pos[1];
+    
+    let imageNode = existingImage;
+    if (!imageNode) {
+        imageNode = LiteGraph.createNode("sdforms/image");
+        if (imageNode) {
+            imageNode.pos = [baseX + 300, baseY];
+            graph.add(imageNode);
+            console.log('➕ Added Image component');
+        }
+    }
+    
+    let outputNode = existingOutput;
+    if (!outputNode) {
+        outputNode = LiteGraph.createNode("sdforms/output");
+        if (outputNode) {
+            outputNode.pos = [baseX + 300, baseY + 150];
+            graph.add(outputNode);
+            console.log('➕ Added Output component');
+        }
+    }
+    
+    // Auto-connect the workflow
+    setTimeout(() => {
+        try {
+            // Model → Image (direct images output)
+            if (modelNode && imageNode && modelNode.outputs && imageNode.inputs) {
+                // Find the "images" output port
+                let imagesOutputIdx = -1;
+                for (let i = 0; i < modelNode.outputs.length; i++) {
+                    if (modelNode.outputs[i].name === 'images') {
+                        imagesOutputIdx = i;
+                        break;
+                    }
+                }
+                
+                if (imagesOutputIdx >= 0 && !isAlreadyConnected(modelNode, imagesOutputIdx, imageNode, 0)) {
+                    modelNode.connect(imagesOutputIdx, imageNode, 0);
+                    console.log('🔗 Connected Model → Image (images)');
+                }
+            }
+            
+            // Model → Output (direct connection)
+            if (modelNode && outputNode && modelNode.outputs && outputNode.inputs) {
+                // Find the "images" output port
+                let imagesOutputIdx = -1;
+                for (let i = 0; i < modelNode.outputs.length; i++) {
+                    if (modelNode.outputs[i].name === 'images') {
+                        imagesOutputIdx = i;
+                        break;
+                    }
+                }
+                
+                if (imagesOutputIdx >= 0 && !isAlreadyConnected(modelNode, imagesOutputIdx, outputNode, 0)) {
+                    modelNode.connect(imagesOutputIdx, outputNode, 0);
+                    console.log('🔗 Connected Model → Output (images)');
+                }
+            }
+            
+            console.log('✅ Direct output workflow connected: Model → Image + Output');
+        } catch (error) {
+            console.warn('Connection failed:', error);
         }
     }, 100);
 }
