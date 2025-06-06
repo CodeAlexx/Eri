@@ -2,7 +2,7 @@
 
 **⚠️ SEMI FUNCTIONAL WORK IN DEVELOPMENT ⚠️**
 
-![Demo Video](https://user-images.githubusercontent.com/your-username/demo-video.mp4)
+![image](https://github.com/user-attachments/assets/3792df9a-f566-4dae-b68c-c315c9edf169)
 
 A beautiful, component-based visual workflow system for Stable Diffusion image and video generation with a stunning purple macOS-themed interface.
 
